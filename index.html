@@ -20,9 +20,8 @@
   .settings-panel input:focus { border-color: #c8a96e; }
   .save-btn { width: 100%; margin-top: 12px; background: #1a1208; color: #c8a96e; border: none; border-radius: 8px; padding: 10px; font-size: 14px; font-weight: 600; cursor: pointer; }
   .camera-card { background: #fff; border: 1px solid #e0d8c8; border-radius: 14px; padding: 1.1rem; margin-bottom: 1rem; }
-  .cam-toggle { background: #1a1208; color: #c8a96e; border: none; border-radius: 8px; padding: 11px 18px; font-size: 15px; font-weight: 600; cursor: pointer; width: 100%; text-align: center; }
-  .cam-toggle.active { background: #c0392b; color: #fff; }
-  .cam-toggle:active { transform: scale(0.98); }
+  .cam-toggle { display: block; background: #1a1208; color: #c8a96e; border: none; border-radius: 8px; padding: 11px 18px; font-size: 15px; font-weight: 600; cursor: pointer; width: 100%; text-align: center; text-decoration: none; box-sizing: border-box; }
+  .cam-toggle:active { transform: scale(0.98); opacity: 0.85; }
   .viewfinder-wrap { display: none; position: relative; margin-top: 12px; border-radius: 12px; overflow: hidden; background: #000; }
   #cam-video { width: 100%; display: block; border-radius: 12px; max-height: 300px; object-fit: cover; }
   #cam-canvas { display: none; }
@@ -106,10 +105,10 @@
   </div>
 
   <div class="camera-card">
-    <button class="cam-toggle" id="cam-btn" onclick="openCamera()">&#128247; &nbsp;Scan QR Code</button>
-    <input type="file" id="cam-input" accept="image/*" capture="environment" style="display:none" onchange="handleCapture(this)">
+    <input type="file" id="cam-input" accept="image/*" capture="environment" onchange="handleCapture(this)" style="position:absolute;left:-9999px;top:-9999px;opacity:0;width:1px;height:1px;">
+    <label for="cam-input" class="cam-toggle" id="cam-btn">&#128247; &nbsp;Scan QR Code</label>
     <canvas id="cam-canvas" style="display:none"></canvas>
-    <div class="cam-status" id="cam-status">Tap button to open camera</div>
+    <div class="cam-status" id="cam-status">Tap button — phone camera will open</div>
     <div class="engine-badge" id="engine-badge"></div>
   </div>
 
@@ -138,7 +137,7 @@
     <div class="log-header"><span>Recent scans</span><button onclick="clearAll()">Clear all</button></div>
     <ul class="log-list" id="log-list"><li class="empty-log">No scans yet</li></ul>
   </div>
-  <div class="footer">ALYAFEI WEDDING &middot; VERIFICATION v4.0</div>
+  <div class="footer">ALYAFEI WEDDING &middot; VERIFICATION v5.0</div>
 </div>
 
 <script>
@@ -157,9 +156,7 @@ window.addEventListener("load", function() {
 
 // ── CAMERA: use file input with capture="environment" ──
 // This is the most compatible method — works on ALL phones without permission prompts
-function openCamera() {
-  document.getElementById("cam-input").click();
-}
+// camera opened via label - no JS needed
 
 function handleCapture(input) {
   if (!input.files || !input.files[0]) return;

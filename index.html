@@ -6,33 +6,18 @@
 <title>Wedding Verification — Alyafei</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    background: #f5f0e8; min-height: 100vh;
-    display: flex; flex-direction: column; align-items: center; padding: 0 0 2rem;
-  }
-  .top-bar {
-    width: 100%; background: #1a1208;
-    padding: 1rem 1.25rem 0.85rem; text-align: center; position: relative;
-  }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #f5f0e8; min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 0 0 2rem; }
+  .top-bar { width: 100%; background: #1a1208; padding: 1rem 1.25rem 0.85rem; text-align: center; position: relative; }
   .top-bar .arabic { color: #c8a96e; font-size: 20px; font-weight: 600; direction: rtl; margin-bottom: 3px; }
   .top-bar .sub { color: rgba(200,169,110,0.5); font-size: 11px; letter-spacing: 0.08em; }
-  .settings-btn {
-    position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
-    background: rgba(200,169,110,0.15); border: 1px solid rgba(200,169,110,0.3);
-    color: #c8a96e; border-radius: 8px; padding: 6px 10px; font-size: 18px; cursor: pointer;
-  }
+  .settings-btn { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); background: rgba(200,169,110,0.15); border: 1px solid rgba(200,169,110,0.3); color: #c8a96e; border-radius: 8px; padding: 6px 10px; font-size: 18px; cursor: pointer; }
   .main { width: 100%; max-width: 440px; padding: 1.25rem 1rem 0; }
-
-  /* SETTINGS */
   .settings-panel { display: none; background: #fff; border: 1px solid #e0d8c8; border-radius: 14px; padding: 1.1rem; margin-bottom: 1rem; }
   .settings-panel h3 { font-size: 14px; color: #555; margin-bottom: 12px; font-weight: 600; }
   .settings-panel label { display: block; font-size: 12px; color: #777; margin-bottom: 4px; margin-top: 10px; }
   .settings-panel input { width: 100%; border: 1px solid #ddd; border-radius: 8px; padding: 8px 12px; font-size: 14px; color: #1a1208; outline: none; }
   .settings-panel input:focus { border-color: #c8a96e; }
   .save-btn { width: 100%; margin-top: 12px; background: #1a1208; color: #c8a96e; border: none; border-radius: 8px; padding: 10px; font-size: 14px; font-weight: 600; cursor: pointer; }
-
-  /* RESULT CARD - shown when ?id= is in URL */
   .result-card { border-radius: 14px; padding: 1.5rem; text-align: center; margin-bottom: 1rem; animation: pop 0.25s ease; }
   @keyframes pop { from { transform: scale(0.93); opacity: 0.4; } to { transform: scale(1); opacity: 1; } }
   .result-card.valid     { background: #eafaf1; border: 2px solid #27ae60; }
@@ -48,14 +33,14 @@
   .result-card.invalid   .result-sub { color: #e74c3c; }
   .result-card.duplicate .result-sub { color: #f39c12; }
   .result-id { font-size: 13px; font-family: monospace; opacity: 0.55; color: #333; margin-top: 4px; }
-
-  /* HOW TO USE - shown when no ?id= in URL */
+  .loading-card { background: #fff; border: 1px solid #e0d8c8; border-radius: 14px; padding: 2rem; text-align: center; margin-bottom: 1rem; }
+  .loading-card .spinner { width: 40px; height: 40px; border: 3px solid #e0d8c8; border-top-color: #c8a96e; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 12px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-card p { font-size: 14px; color: #888; }
   .how-card { background: #fff; border: 1px solid #e0d8c8; border-radius: 14px; padding: 1.25rem; margin-bottom: 1rem; text-align: center; }
   .how-card .icon { font-size: 40px; margin-bottom: 10px; }
   .how-card h3 { font-size: 16px; font-weight: 600; color: #1a1208; margin-bottom: 8px; }
   .how-card p { font-size: 13px; color: #888; line-height: 1.6; }
-
-  /* MANUAL INPUT */
   .divider-row { display: flex; align-items: center; gap: 10px; margin: 0.5rem 0 1rem; }
   .divider-row hr { flex:1; border:none; border-top:1px solid #e0d8c8; }
   .divider-row span { font-size: 12px; color: #bbb; white-space: nowrap; }
@@ -65,16 +50,12 @@
   .scan-box input:focus { border-color: #c8a96e; }
   .verify-btn { width: 100%; background: #1a1208; color: #c8a96e; border: none; border-radius: 10px; padding: 13px; font-size: 16px; font-weight: 600; cursor: pointer; }
   .verify-btn:active { transform: scale(0.98); }
-
-  /* STATS */
   .stats-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 1rem; }
   .stat { background: #fff; border: 1px solid #e0d8c8; border-radius: 12px; padding: 10px 8px; text-align: center; }
   .stat .val { font-size: 22px; font-weight: 700; margin-bottom: 2px; color: #1a1208; }
   .stat .lbl { font-size: 11px; color: #999; }
   .stat.green .val { color: #27ae60; }
   .stat.red   .val { color: #e74c3c; }
-
-  /* LOG */
   .log-wrap { background: #fff; border: 1px solid #e0d8c8; border-radius: 14px; padding: 1rem; }
   .log-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
   .log-header span { font-size: 12px; font-weight: 600; color: #999; letter-spacing: 0.06em; text-transform: uppercase; }
@@ -88,10 +69,9 @@
   .time-text { font-size: 11px; color: #aaa; white-space: nowrap; }
   .empty-log { font-size: 13px; color: #bbb; text-align: center; padding: 16px 0; }
   .footer { margin-top: 1.5rem; text-align: center; font-size: 11px; color: #bbb; letter-spacing: 0.03em; }
-
-  /* SCAN AGAIN BUTTON */
   .scan-again { display: block; width: 100%; margin-top: 12px; background: #1a1208; color: #c8a96e; border: none; border-radius: 10px; padding: 12px; font-size: 15px; font-weight: 600; cursor: pointer; text-align: center; }
   .scan-again:active { transform: scale(0.98); }
+  .scan-time { font-size: 11px; color: #aaa; margin-top: 6px; }
 </style>
 </head>
 <body>
@@ -103,7 +83,6 @@
 </div>
 
 <div class="main">
-
   <div class="settings-panel" id="settings-panel">
     <h3>&#9881; SETTINGS</h3>
     <label>Total number of cards issued</label>
@@ -115,7 +94,6 @@
     <button class="save-btn" onclick="saveSettings()">Save &amp; Apply</button>
   </div>
 
-  <!-- RESULT or HOW-TO shown here by JS -->
   <div id="main-content"></div>
 
   <div class="divider-row"><hr><span>or type manually</span><hr></div>
@@ -134,79 +112,128 @@
   </div>
 
   <div class="log-wrap">
-    <div class="log-header"><span>Recent scans</span><button onclick="clearAll()">Clear all</button></div>
+    <div class="log-header"><span>Recent scans</span><button onclick="clearLog()">Clear</button></div>
     <ul class="log-list" id="log-list"><li class="empty-log">No scans yet</li></ul>
   </div>
 
-  <div class="footer">ALYAFEI WEDDING &middot; VERIFICATION v8.0</div>
+  <div class="footer">ALYAFEI WEDDING &middot; VERIFICATION v9.0 &middot; Server-tracked</div>
 </div>
 
 <script>
-var CONFIG = { total: 400, prefix: "ALYAFEI-WED-2026", arabic: "حفل زفاف عبدالرحمن اليافعي" };
-var admitted = 0, rejected = 0, scannedIds = new Set(), scanLog = [];
+var SUPABASE_URL = "https://rrnqyuhoncytoywnoruz.supabase.co";
+var SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJybnF5dWhvbmN5dG95d25vcnV6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEwODg4ODIsImV4cCI6MjA5NjY2NDg4Mn0.eSr9o-hDS_vTJdmuYH_trTLpzoex-qcS8DzpIsvAQ2g";
+var CONFIG = { total: 400, prefix: "ALYAFEI-WED-2026" };
+var scanLog = [];
 
-// ── ON LOAD: check URL for ?id= param ──
-window.addEventListener("load", function() {
+// ── SUPABASE HELPERS ──
+async function dbCheck(guestId) {
+  // Check if this guest_id already exists in scans table
+  var res = await fetch(SUPABASE_URL + "/rest/v1/scans?guest_id=eq." + encodeURIComponent(guestId) + "&select=guest_id,scanned_at,device", {
+    headers: {
+      "apikey": SUPABASE_KEY,
+      "Authorization": "Bearer " + SUPABASE_KEY
+    }
+  });
+  var data = await res.json();
+  return data; // array — empty means not scanned yet
+}
+
+async function dbRecord(guestId) {
+  // Record the scan
+  var device = navigator.userAgent.substring(0, 80);
+  await fetch(SUPABASE_URL + "/rest/v1/scans", {
+    method: "POST",
+    headers: {
+      "apikey": SUPABASE_KEY,
+      "Authorization": "Bearer " + SUPABASE_KEY,
+      "Content-Type": "application/json",
+      "Prefer": "return=minimal"
+    },
+    body: JSON.stringify({
+      guest_id: guestId,
+      scanned_at: new Date().toISOString(),
+      device: device
+    })
+  });
+}
+
+// ── ON LOAD ──
+window.addEventListener("load", async function() {
+  document.getElementById("stat-total").textContent = CONFIG.total;
   var params = new URLSearchParams(window.location.search);
   var id = params.get("id");
   if (id) {
-    // QR code was scanned — verify and show result
-    var content = document.getElementById("main-content");
-    var parsed = parseId(id);
-    var html = "";
-    if (!parsed.valid) {
-      html = makeResult("invalid", "&#10007;", "INVALID CARD", "This card is not genuine", id.toUpperCase());
-      rejected++; addLog(id.toUpperCase(), "i");
-    } else if (scannedIds.has(parsed.full)) {
-      html = makeResult("duplicate", "&#9888;", "ALREADY SCANNED", "This card was already used to enter", parsed.full);
-      rejected++; addLog(parsed.full, "d");
-    } else {
-      html = makeResult("valid", "&#10003;", "VALID GUEST", "Guest #" + parsed.num + " of " + CONFIG.total + " &mdash; Welcome", parsed.full);
-      scannedIds.add(parsed.full); admitted++; addLog(parsed.full, "v");
-    }
-    html += "<button class=\"scan-again\" onclick=\"window.location.href=window.location.pathname\">&#128247; Scan next guest</button>";
-    content.innerHTML = html;
-    updateStats();
-    if (navigator.vibrate) navigator.vibrate([80,40,80]);
+    await verifyId(id.trim().toUpperCase());
   } else {
-    // No ID in URL — show instructions
     document.getElementById("main-content").innerHTML =
-      "<div class=\"how-card\">" +
-      "<div class=\"icon\">&#128247;</div>" +
-      "<h3>How to use</h3>" +
-      "<p>Point your phone camera at a guest QR code. The result will appear instantly on this page.</p>" +
-      "</div>";
+      '<div class="how-card">' +
+      '<div class="icon">&#128247;</div>' +
+      '<h3>Ready to verify guests</h3>' +
+      '<p>Point iPhone camera at guest QR code — result appears instantly.<br><br>Or type the guest ID manually below.</p>' +
+      '</div>';
   }
-  document.getElementById("stat-total").textContent = CONFIG.total;
 });
 
-function makeResult(cls, icon, title, sub, id) {
-  return "<div class=\"result-card " + cls + "\">" +
-    "<div class=\"result-icon\">" + icon + "</div>" +
-    "<p class=\"result-title\">" + title + "</p>" +
-    "<p class=\"result-sub\">" + sub + "</p>" +
-    "<p class=\"result-id\">" + id + "</p>" +
-    "</div>";
+// ── VERIFY WITH SERVER CHECK ──
+async function verifyId(raw) {
+  var content = document.getElementById("main-content");
+
+  // Show loading spinner
+  content.innerHTML = '<div class="loading-card"><div class="spinner"></div><p>Checking guest...</p></div>';
+
+  var parsed = parseId(raw);
+
+  if (!parsed.valid) {
+    showResult("invalid", "&#10007;", "INVALID CARD", "This card is not genuine", raw);
+    addLog(raw, "i");
+    updateStats();
+    return;
+  }
+
+  try {
+    // Check database for previous scan
+    var existing = await dbCheck(parsed.full);
+
+    if (existing && existing.length > 0) {
+      // Already scanned — show when and which device
+      var scanTime = new Date(existing[0].scanned_at).toLocaleTimeString("en-GB", {hour:"2-digit", minute:"2-digit", second:"2-digit"});
+      showResult("duplicate", "&#9888;", "ALREADY SCANNED",
+        "This card was used at " + scanTime + " — entry denied",
+        parsed.full);
+      addLog(parsed.full, "d");
+    } else {
+      // First time — record it and allow entry
+      await dbRecord(parsed.full);
+      showResult("valid", "&#10003;", "VALID GUEST",
+        "Guest #" + parsed.num + " of " + CONFIG.total + " &mdash; Welcome",
+        parsed.full);
+      addLog(parsed.full, "v");
+    }
+  } catch(err) {
+    // Network error — fail safe (allow entry but warn)
+    showResult("valid", "&#10003;", "VALID GUEST",
+      "Guest #" + parsed.num + " &mdash; Welcome (offline mode)",
+      parsed.full);
+    addLog(parsed.full, "v");
+  }
+
+  updateStats();
+  if (navigator.vibrate) navigator.vibrate([80,40,80]);
 }
 
-// ── SETTINGS ──
-function toggleSettings() {
-  var p = document.getElementById("settings-panel");
-  p.style.display = p.style.display === "block" ? "none" : "block";
-}
-function saveSettings() {
-  var total = parseInt(document.getElementById("set-total").value);
-  var prefix = document.getElementById("set-prefix").value.trim().toUpperCase();
-  var arabic = document.getElementById("set-arabic").value.trim();
-  if (!total || total < 1) { alert("Enter a valid number."); return; }
-  CONFIG.total = total; CONFIG.prefix = prefix; CONFIG.arabic = arabic;
-  document.getElementById("stat-total").textContent = total;
-  document.getElementById("id-input").placeholder = prefix + "-001";
-  document.getElementById("top-arabic").textContent = arabic;
-  clearAll(); toggleSettings(); alert("Saved!");
+function showResult(cls, icon, title, sub, id) {
+  var content = document.getElementById("main-content");
+  content.innerHTML =
+    '<div class="result-card ' + cls + '">' +
+    '<div class="result-icon">' + icon + '</div>' +
+    '<p class="result-title">' + title + '</p>' +
+    '<p class="result-sub">' + sub + '</p>' +
+    '<p class="result-id">' + id + '</p>' +
+    '</div>' +
+    '<button class="scan-again" onclick="window.location.href=window.location.pathname">&#128247; Scan next guest</button>';
 }
 
-// ── MANUAL INPUT ──
+// ── MANUAL VERIFY ──
 document.addEventListener("DOMContentLoaded", function() {
   var inp = document.getElementById("id-input");
   if (inp) {
@@ -214,27 +241,13 @@ document.addEventListener("DOMContentLoaded", function() {
     inp.addEventListener("input", function(e) { e.target.value = e.target.value.toUpperCase(); });
   }
 });
-function verifyManual() {
-  var raw = document.getElementById("id-input").value;
-  if (!raw.trim()) return;
-  var parsed = parseId(raw);
-  var content = document.getElementById("main-content");
-  var html = "";
-  if (!parsed.valid) {
-    html = makeResult("invalid", "&#10007;", "INVALID CARD", "This ID does not match any issued card", raw.trim().toUpperCase());
-    rejected++; addLog(raw.trim().toUpperCase(), "i");
-  } else if (scannedIds.has(parsed.full)) {
-    html = makeResult("duplicate", "&#9888;", "ALREADY SCANNED", "This card was already used to enter", parsed.full);
-    rejected++; addLog(parsed.full, "d");
-  } else {
-    html = makeResult("valid", "&#10003;", "VALID GUEST", "Guest #" + parsed.num + " of " + CONFIG.total + " &mdash; Welcome", parsed.full);
-    scannedIds.add(parsed.full); admitted++; addLog(parsed.full, "v");
-  }
-  html += "<button class=\"scan-again\" onclick=\"window.location.href=window.location.pathname\">&#128247; Scan next guest</button>";
-  content.innerHTML = html;
-  updateStats();
+
+async function verifyManual() {
+  var raw = document.getElementById("id-input").value.trim();
+  if (!raw) return;
   document.getElementById("id-input").value = "";
-  content.scrollIntoView({ behavior: "smooth", block: "center" });
+  await verifyId(raw);
+  document.getElementById("main-content").scrollIntoView({ behavior: "smooth", block: "center" });
 }
 
 // ── PARSE ID ──
@@ -242,37 +255,57 @@ function parseId(raw) {
   var val = raw.trim().toUpperCase();
   var esc = CONFIG.prefix.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   var m = val.match(new RegExp("^" + esc + "[-]?(\\d{1,4})$"));
-  if (m) { var n = parseInt(m[1]); if (n>=1&&n<=CONFIG.total) return { valid:true, num:n, full:CONFIG.prefix+"-"+String(n).padStart(3,"0") }; }
+  if (m) { var n=parseInt(m[1]); if(n>=1&&n<=CONFIG.total) return {valid:true,num:n,full:CONFIG.prefix+"-"+String(n).padStart(3,"0")}; }
   var m2 = val.match(/^(\d{1,4})$/);
-  if (m2) { var n2=parseInt(m2[1]); if (n2>=1&&n2<=CONFIG.total) return { valid:true, num:n2, full:CONFIG.prefix+"-"+String(n2).padStart(3,"0") }; }
-  return { valid:false, full:val };
+  if (m2) { var n2=parseInt(m2[1]); if(n2>=1&&n2<=CONFIG.total) return {valid:true,num:n2,full:CONFIG.prefix+"-"+String(n2).padStart(3,"0")}; }
+  return {valid:false,full:val};
 }
 
 // ── STATS & LOG ──
+var admitted=0, rejected=0;
 function updateStats() {
-  document.getElementById("stat-admitted").textContent = admitted;
-  document.getElementById("stat-rejected").textContent = rejected;
+  var v=scanLog.filter(function(e){return e.type==="v"}).length;
+  var bad=scanLog.filter(function(e){return e.type!=="v"}).length;
+  document.getElementById("stat-admitted").textContent=v;
+  document.getElementById("stat-rejected").textContent=bad;
 }
 function addLog(id, type) {
-  var now = new Date();
-  var time = now.toLocaleTimeString("en-GB", { hour:"2-digit", minute:"2-digit", second:"2-digit" });
-  scanLog.unshift({ id:id, type:type, time:time });
-  if (scanLog.length > 100) scanLog.pop();
+  var now=new Date();
+  var time=now.toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit",second:"2-digit"});
+  scanLog.unshift({id:id,type:type,time:time});
+  if(scanLog.length>100) scanLog.pop();
   renderLog();
 }
 function renderLog() {
-  var list = document.getElementById("log-list");
-  if (!scanLog.length) { list.innerHTML = "<li class=\"empty-log\">No scans yet</li>"; return; }
-  list.innerHTML = scanLog.map(function(e) {
-    var lbl = e.type==="v"?"&#10003;":e.type==="d"?"&#9888;":"&#10007;";
-    return "<li class=\"log-item "+e.type+"\"><div class=\"dot\"></div><span class=\"id-text\">"+lbl+" "+e.id+"</span><span class=\"time-text\">"+e.time+"</span></li>";
+  var list=document.getElementById("log-list");
+  if(!scanLog.length){list.innerHTML='<li class="empty-log">No scans yet</li>';return;}
+  list.innerHTML=scanLog.map(function(e){
+    var lbl=e.type==="v"?"&#10003;":e.type==="d"?"&#9888;":"&#10007;";
+    return '<li class="log-item '+e.type+'"><div class="dot"></div><span class="id-text">'+lbl+' '+e.id+'</span><span class="time-text">'+e.time+'</span></li>';
   }).join("");
 }
-function clearAll() {
-  admitted=0; rejected=0; scannedIds.clear(); scanLog=[];
-  updateStats();
-  document.getElementById("result-card") && (document.getElementById("result-card").style.display="none");
+function clearLog() {
+  scanLog=[];admitted=0;rejected=0;
+  document.getElementById("stat-admitted").textContent=0;
+  document.getElementById("stat-rejected").textContent=0;
   renderLog();
+}
+
+// ── SETTINGS ──
+function toggleSettings() {
+  var p=document.getElementById("settings-panel");
+  p.style.display=p.style.display==="block"?"none":"block";
+}
+function saveSettings() {
+  var total=parseInt(document.getElementById("set-total").value);
+  var prefix=document.getElementById("set-prefix").value.trim().toUpperCase();
+  var arabic=document.getElementById("set-arabic").value.trim();
+  if(!total||total<1){alert("Enter a valid number.");return;}
+  CONFIG.total=total;CONFIG.prefix=prefix;
+  document.getElementById("stat-total").textContent=total;
+  document.getElementById("id-input").placeholder=prefix+"-001";
+  document.getElementById("top-arabic").textContent=arabic;
+  clearLog();toggleSettings();alert("Saved!");
 }
 </script>
 </body>

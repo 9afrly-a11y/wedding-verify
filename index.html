@@ -311,18 +311,20 @@
   var videoStream = null;
   var rafId = null;
   var lastScanTime = 0;
-  var cooldown = 2500; // ms between scans to avoid double-triggers
+  var cooldown = 2500;
+  var frameCount = 0;
 
   function toggleCamera() {
     if (cameraOn) { stopCamera(); } else { startCamera(); }
   }
 
   function startCamera() {
+    // Request highest resolution possible for better QR detection
     var constraints = {
       video: {
-        facingMode: { ideal: 'environment' }, // back camera
-        width: { ideal: 1280 },
-        height: { ideal: 720 }
+        facingMode: { ideal: 'environment' },
+        width:  { ideal: 1920 },
+        height: { ideal: 1080 }
       }
     };
     navigator.mediaDevices.getUserMedia(constraints)
@@ -333,18 +335,19 @@
         video.play();
         video.onloadedmetadata = function() {
           document.getElementById('viewfinder-wrap').style.display = 'block';
-          document.getElementById('cam-btn').textContent = '⏹  Stop Camera';
+          document.getElementById('cam-btn').innerHTML = '⏹ &nbsp;Stop Camera';
           document.getElementById('cam-btn').classList.add('active');
-          document.getElementById('cam-status').textContent = 'Scanning for QR code...';
+          document.getElementById('cam-status').textContent = 'Scanning — point at QR code';
           document.getElementById('cam-status').className = 'cam-status scanning';
           cameraOn = true;
+          frameCount = 0;
           rafId = requestAnimationFrame(scanFrame);
         };
       })
       .catch(function(err) {
         var msg = 'Camera access denied.';
         if (err.name === 'NotAllowedError') {
-          msg = 'Camera permission denied. Please allow camera access in your browser settings.';
+          msg = 'Camera permission denied. Open Safari Settings → Camera → Allow.';
         } else if (err.name === 'NotFoundError') {
           msg = 'No camera found on this device.';
         }
@@ -371,34 +374,60 @@
 
   function scanFrame() {
     if (!cameraOn) return;
+    frameCount++;
+
+    // Only process every 3rd frame — reduces CPU load, keeps it responsive
+    if (frameCount % 3 !== 0) {
+      rafId = requestAnimationFrame(scanFrame);
+      return;
+    }
+
     var video = document.getElementById('cam-video');
     var canvas = document.getElementById('cam-canvas');
 
     if (video.readyState === video.HAVE_ENOUGH_DATA) {
-      canvas.width  = video.videoWidth;
-      canvas.height = video.videoHeight;
-      var ctx = canvas.getContext('2d');
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      var vw = video.videoWidth;
+      var vh = video.videoHeight;
 
       var now = Date.now();
       if (now - lastScanTime > cooldown) {
-        var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        var code = jsQR(imageData.data, imageData.width, imageData.height, {
-          inversionAttempts: 'dontInvert'
-        });
-        if (code && code.data) {
+        var code = null;
+
+        // Pass 1: scan full frame at full resolution
+        canvas.width  = vw;
+        canvas.height = vh;
+        var ctx = canvas.getContext('2d');
+        ctx.drawImage(video, 0, 0, vw, vh);
+        var imgFull = ctx.getImageData(0, 0, vw, vh);
+        code = jsQR(imgFull.data, vw, vh, { inversionAttempts: 'attemptBoth' });
+
+        // Pass 2: if not found, scan centre crop (zoomed in) — helps with screen glare
+        if (!code) {
+          var cropSize = Math.min(vw, vh) * 0.65;
+          var cx = (vw - cropSize) / 2;
+          var cy = (vh - cropSize) / 2;
+          var cropCanvas = document.createElement('canvas');
+          cropCanvas.width  = 600;
+          cropCanvas.height = 600;
+          var cropCtx = cropCanvas.getContext('2d');
+          cropCtx.drawImage(video, cx, cy, cropSize, cropSize, 0, 0, 600, 600);
+          var imgCrop = cropCtx.getImageData(0, 0, 600, 600);
+          code = jsQR(imgCrop.data, 600, 600, { inversionAttempts: 'attemptBoth' });
+        }
+
+        if (code && code.data && code.data.trim() !== '') {
           lastScanTime = now;
-          document.getElementById('cam-status').textContent = 'QR detected: ' + code.data;
+          var detected = code.data.trim();
+          document.getElementById('cam-status').textContent = '✓ Found: ' + detected;
           document.getElementById('cam-status').className = 'cam-status found';
           vibrate();
-          verify(code.data);
-          // Reset status after 2s
+          verify(detected);
           setTimeout(function() {
             if (cameraOn) {
-              document.getElementById('cam-status').textContent = 'Scanning for QR code...';
+              document.getElementById('cam-status').textContent = 'Scanning — point at QR code';
               document.getElementById('cam-status').className = 'cam-status scanning';
             }
-          }, 2200);
+          }, 2500);
         }
       }
     }

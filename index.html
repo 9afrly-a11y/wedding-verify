@@ -165,7 +165,24 @@ var COOLDOWN = 2500;
 function toggleCamera() { cameraOn ? stopCamera() : startCamera(); }
 
 function startCamera() {
-  navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment" }, width: { ideal: 1920 }, height: { ideal: 1080 } } })
+  // Check 1: HTTPS required
+  if (location.protocol !== "https:" && location.hostname !== "localhost") {
+    setStatus("Error: must open via https:// link, not local file", "error");
+    alert("Camera requires HTTPS.
+
+Open this link in Safari:
+https://9afrly-a11y.github.io/wedding-verify");
+    return;
+  }
+  // Check 2: mediaDevices API available
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    setStatus("Error: camera API not available in this browser", "error");
+    alert("Camera not supported.
+Please open in Safari (iPhone) or Chrome (Android).");
+    return;
+  }
+  setStatus("Requesting camera permission...", "scanning");
+  navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment" }, width: { ideal: 1280 }, height: { ideal: 720 } } })
   .then(function(stream) {
     videoStream = stream;
     var v = document.getElementById("cam-video");
@@ -180,7 +197,39 @@ function startCamera() {
     };
   })
   .catch(function(err) {
-    setStatus(err.name === "NotAllowedError" ? "Permission denied - go to Safari Settings > Camera > Allow" : "Camera not available", "error");
+    var msg = "";
+    if (err.name === "NotAllowedError") {
+      msg = "Permission denied. On iPhone: Settings > Safari > Camera > Allow";
+      alert("Camera permission denied.
+
+Fix: iPhone Settings > Safari > Camera > set to Allow");
+    } else if (err.name === "NotFoundError") {
+      msg = "No camera found on this device";
+    } else if (err.name === "NotReadableError") {
+      msg = "Camera in use by another app - close other apps and try again";
+    } else if (err.name === "OverconstrainedError") {
+      msg = "Camera constraint error - trying basic mode...";
+      // Retry with minimal constraints
+      navigator.mediaDevices.getUserMedia({ video: true })
+        .then(function(stream) {
+          videoStream = stream;
+          var v = document.getElementById("cam-video");
+          v.srcObject = stream; v.play();
+          v.onloadedmetadata = function() {
+            document.getElementById("viewfinder-wrap").style.display = "block";
+            document.getElementById("cam-btn").innerHTML = "&#9209; &nbsp;Stop Camera";
+            document.getElementById("cam-btn").classList.add("active");
+            setStatus("Camera open (basic mode)", "scanning");
+            cameraOn = true; frameCount = 0;
+            USE_NATIVE ? nativeScanLoop() : (rafId = requestAnimationFrame(jsqrLoop));
+          };
+        })
+        .catch(function(e2) { setStatus("Camera failed: " + e2.name, "error"); });
+      return;
+    } else {
+      msg = "Camera error: " + err.name + " - " + err.message;
+    }
+    setStatus(msg, "error");
   });
 }
 

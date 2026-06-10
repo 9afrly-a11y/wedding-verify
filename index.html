@@ -3,44 +3,60 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Wedding Verification - Alyafei</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js"></script>
+<title>Wedding Verification — Alyafei</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #f5f0e8; min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 0 0 2rem; }
-  .top-bar { width: 100%; background: #1a1208; padding: 1rem 1.25rem 0.85rem; text-align: center; position: relative; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: #f5f0e8; min-height: 100vh;
+    display: flex; flex-direction: column; align-items: center; padding: 0 0 2rem;
+  }
+  .top-bar {
+    width: 100%; background: #1a1208;
+    padding: 1rem 1.25rem 0.85rem; text-align: center; position: relative;
+  }
   .top-bar .arabic { color: #c8a96e; font-size: 20px; font-weight: 600; direction: rtl; margin-bottom: 3px; }
   .top-bar .sub { color: rgba(200,169,110,0.5); font-size: 11px; letter-spacing: 0.08em; }
-  .settings-btn { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); background: rgba(200,169,110,0.15); border: 1px solid rgba(200,169,110,0.3); color: #c8a96e; border-radius: 8px; padding: 6px 10px; font-size: 18px; cursor: pointer; }
+  .settings-btn {
+    position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+    background: rgba(200,169,110,0.15); border: 1px solid rgba(200,169,110,0.3);
+    color: #c8a96e; border-radius: 8px; padding: 6px 10px; font-size: 18px; cursor: pointer;
+  }
   .main { width: 100%; max-width: 440px; padding: 1.25rem 1rem 0; }
+
+  /* SETTINGS */
   .settings-panel { display: none; background: #fff; border: 1px solid #e0d8c8; border-radius: 14px; padding: 1.1rem; margin-bottom: 1rem; }
   .settings-panel h3 { font-size: 14px; color: #555; margin-bottom: 12px; font-weight: 600; }
   .settings-panel label { display: block; font-size: 12px; color: #777; margin-bottom: 4px; margin-top: 10px; }
   .settings-panel input { width: 100%; border: 1px solid #ddd; border-radius: 8px; padding: 8px 12px; font-size: 14px; color: #1a1208; outline: none; }
   .settings-panel input:focus { border-color: #c8a96e; }
   .save-btn { width: 100%; margin-top: 12px; background: #1a1208; color: #c8a96e; border: none; border-radius: 8px; padding: 10px; font-size: 14px; font-weight: 600; cursor: pointer; }
-  .camera-card { background: #fff; border: 1px solid #e0d8c8; border-radius: 14px; padding: 1.1rem; margin-bottom: 1rem; }
-  .cam-toggle { position: relative; overflow: hidden; }
-  .cam-toggle { display: block; background: #1a1208; color: #c8a96e; border: none; border-radius: 8px; padding: 11px 18px; font-size: 15px; font-weight: 600; cursor: pointer; width: 100%; text-align: center; text-decoration: none; box-sizing: border-box; }
-  .cam-toggle:active { transform: scale(0.98); opacity: 0.85; }
-  .viewfinder-wrap { display: none; position: relative; margin-top: 12px; border-radius: 12px; overflow: hidden; background: #000; }
-  #cam-video { width: 100%; display: block; border-radius: 12px; max-height: 300px; object-fit: cover; }
-  #cam-canvas { display: none; }
-  .scan-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; display: flex; align-items: center; justify-content: center; }
-  .scan-box-frame { width: 190px; height: 190px; position: relative; }
-  .scan-box-frame::before, .scan-box-frame::after, .scan-box-frame span::before, .scan-box-frame span::after { content: ""; position: absolute; width: 26px; height: 26px; border-color: #c8a96e; border-style: solid; }
-  .scan-box-frame::before { top:0; left:0; border-width:3px 0 0 3px; border-radius:4px 0 0 0; }
-  .scan-box-frame::after  { top:0; right:0; border-width:3px 3px 0 0; border-radius:0 4px 0 0; }
-  .scan-box-frame span::before { bottom:0; left:0; border-width:0 0 3px 3px; border-radius:0 0 0 4px; }
-  .scan-box-frame span::after  { bottom:0; right:0; border-width:0 3px 3px 0; border-radius:0 0 4px 0; }
-  .scan-line { position: absolute; left:6%; right:6%; height:2px; background: linear-gradient(90deg, transparent, #c8a96e, transparent); animation: scanline 1.8s ease-in-out infinite; }
-  @keyframes scanline { 0% { top:8%; opacity:0; } 10% { opacity:1; } 90% { opacity:1; } 100% { top:88%; opacity:0; } }
-  .cam-status { text-align: center; font-size: 12px; color: #aaa; margin-top: 8px; min-height: 18px; }
-  .cam-status.scanning { color: #c8a96e; }
-  .cam-status.found    { color: #27ae60; font-weight: 600; }
-  .cam-status.error    { color: #e74c3c; }
-  .engine-badge { text-align: center; font-size: 10px; color: #bbb; margin-top: 4px; }
-  .divider-row { display: flex; align-items: center; gap: 10px; margin: 1rem 0 0.75rem; }
+
+  /* RESULT CARD - shown when ?id= is in URL */
+  .result-card { border-radius: 14px; padding: 1.5rem; text-align: center; margin-bottom: 1rem; animation: pop 0.25s ease; }
+  @keyframes pop { from { transform: scale(0.93); opacity: 0.4; } to { transform: scale(1); opacity: 1; } }
+  .result-card.valid     { background: #eafaf1; border: 2px solid #27ae60; }
+  .result-card.invalid   { background: #fdf0f0; border: 2px solid #e74c3c; }
+  .result-card.duplicate { background: #fff8e6; border: 2px solid #f39c12; }
+  .result-icon  { font-size: 64px; margin-bottom: 8px; }
+  .result-title { font-size: 26px; font-weight: 700; margin-bottom: 6px; }
+  .result-card.valid     .result-title { color: #1e8449; }
+  .result-card.invalid   .result-title { color: #c0392b; }
+  .result-card.duplicate .result-title { color: #d68910; }
+  .result-sub { font-size: 15px; margin-bottom: 8px; }
+  .result-card.valid     .result-sub { color: #27ae60; }
+  .result-card.invalid   .result-sub { color: #e74c3c; }
+  .result-card.duplicate .result-sub { color: #f39c12; }
+  .result-id { font-size: 13px; font-family: monospace; opacity: 0.55; color: #333; margin-top: 4px; }
+
+  /* HOW TO USE - shown when no ?id= in URL */
+  .how-card { background: #fff; border: 1px solid #e0d8c8; border-radius: 14px; padding: 1.25rem; margin-bottom: 1rem; text-align: center; }
+  .how-card .icon { font-size: 40px; margin-bottom: 10px; }
+  .how-card h3 { font-size: 16px; font-weight: 600; color: #1a1208; margin-bottom: 8px; }
+  .how-card p { font-size: 13px; color: #888; line-height: 1.6; }
+
+  /* MANUAL INPUT */
+  .divider-row { display: flex; align-items: center; gap: 10px; margin: 0.5rem 0 1rem; }
   .divider-row hr { flex:1; border:none; border-top:1px solid #e0d8c8; }
   .divider-row span { font-size: 12px; color: #bbb; white-space: nowrap; }
   .scan-box { background: #fff; border: 1px solid #e0d8c8; border-radius: 14px; padding: 1.1rem; margin-bottom: 1rem; text-align: center; }
@@ -49,27 +65,16 @@
   .scan-box input:focus { border-color: #c8a96e; }
   .verify-btn { width: 100%; background: #1a1208; color: #c8a96e; border: none; border-radius: 10px; padding: 13px; font-size: 16px; font-weight: 600; cursor: pointer; }
   .verify-btn:active { transform: scale(0.98); }
-  .result-card { border-radius: 14px; padding: 1.25rem; text-align: center; margin-bottom: 1rem; display: none; animation: pop 0.2s ease; }
-  @keyframes pop { from { transform:scale(0.95); opacity:0.5; } to { transform:scale(1); opacity:1; } }
-  .result-card.valid     { background: #eafaf1; border: 2px solid #27ae60; }
-  .result-card.invalid   { background: #fdf0f0; border: 2px solid #e74c3c; }
-  .result-card.duplicate { background: #fff8e6; border: 2px solid #f39c12; }
-  .result-icon  { font-size: 52px; margin-bottom: 6px; }
-  .result-title { font-size: 24px; font-weight: 700; margin-bottom: 4px; }
-  .result-card.valid     .result-title { color: #1e8449; }
-  .result-card.invalid   .result-title { color: #c0392b; }
-  .result-card.duplicate .result-title { color: #d68910; }
-  .result-sub { font-size: 14px; margin-bottom: 6px; }
-  .result-card.valid     .result-sub { color: #27ae60; }
-  .result-card.invalid   .result-sub { color: #e74c3c; }
-  .result-card.duplicate .result-sub { color: #f39c12; }
-  .result-id { font-size: 12px; font-family: monospace; opacity: 0.6; color: #333; }
+
+  /* STATS */
   .stats-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 1rem; }
   .stat { background: #fff; border: 1px solid #e0d8c8; border-radius: 12px; padding: 10px 8px; text-align: center; }
   .stat .val { font-size: 22px; font-weight: 700; margin-bottom: 2px; color: #1a1208; }
   .stat .lbl { font-size: 11px; color: #999; }
   .stat.green .val { color: #27ae60; }
   .stat.red   .val { color: #e74c3c; }
+
+  /* LOG */
   .log-wrap { background: #fff; border: 1px solid #e0d8c8; border-radius: 14px; padding: 1rem; }
   .log-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
   .log-header span { font-size: 12px; font-weight: 600; color: #999; letter-spacing: 0.06em; text-transform: uppercase; }
@@ -83,6 +88,10 @@
   .time-text { font-size: 11px; color: #aaa; white-space: nowrap; }
   .empty-log { font-size: 13px; color: #bbb; text-align: center; padding: 16px 0; }
   .footer { margin-top: 1.5rem; text-align: center; font-size: 11px; color: #bbb; letter-spacing: 0.03em; }
+
+  /* SCAN AGAIN BUTTON */
+  .scan-again { display: block; width: 100%; margin-top: 12px; background: #1a1208; color: #c8a96e; border: none; border-radius: 10px; padding: 12px; font-size: 15px; font-weight: 600; cursor: pointer; text-align: center; }
+  .scan-again:active { transform: scale(0.98); }
 </style>
 </head>
 <body>
@@ -94,6 +103,7 @@
 </div>
 
 <div class="main">
+
   <div class="settings-panel" id="settings-panel">
     <h3>&#9881; SETTINGS</h3>
     <label>Total number of cards issued</label>
@@ -105,34 +115,16 @@
     <button class="save-btn" onclick="saveSettings()">Save &amp; Apply</button>
   </div>
 
-  <div class="camera-card">
-    <label class="cam-toggle" id="cam-btn">
-      &#128247; &nbsp;Scan QR Code
-      <input type="file" id="cam-input" accept="image/*" capture="environment" style="position:absolute;left:0;top:0;width:100%;height:100%;opacity:0;cursor:pointer;">
-    </label>
-    <canvas id="cam-canvas" style="display:none"></canvas>
-    <div class="cam-status" id="cam-status">Tap button — phone camera will open</div>
-    <div class="engine-badge" id="engine-badge"></div>
-  </div>
+  <!-- RESULT or HOW-TO shown here by JS -->
+  <div id="main-content"></div>
 
-  <div id="debug-box" style="background:#1a1208;border-radius:10px;padding:10px;margin-bottom:1rem;display:none;">
-    <div style="color:#c8a96e;font-size:11px;font-weight:600;margin-bottom:6px;letter-spacing:0.05em;">DEBUG LOG</div>
-    <div id="debug-log" style="font-family:monospace;font-size:11px;color:#aaa;line-height:1.7;"></div>
-    <button onclick="document.getElementById('debug-box').style.display='none'" style="margin-top:8px;font-size:11px;padding:3px 10px;background:none;border:1px solid #c8a96e;color:#c8a96e;border-radius:4px;cursor:pointer;">Close</button>
-  </div>
   <div class="divider-row"><hr><span>or type manually</span><hr></div>
 
   <div class="scan-box">
     <p>Type guest ID and tap Verify</p>
-    <input type="text" id="id-input" placeholder="ALYAFEI-WED-2026-001" autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false">
+    <input type="text" id="id-input" placeholder="ALYAFEI-WED-2026-001"
+      autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false">
     <button class="verify-btn" onclick="verifyManual()">&#10003; Verify Guest</button>
-  </div>
-
-  <div class="result-card" id="result-card">
-    <div class="result-icon" id="result-icon"></div>
-    <p class="result-title" id="result-title"></p>
-    <p class="result-sub" id="result-sub"></p>
-    <p class="result-id" id="result-id"></p>
   </div>
 
   <div class="stats-row">
@@ -145,141 +137,59 @@
     <div class="log-header"><span>Recent scans</span><button onclick="clearAll()">Clear all</button></div>
     <ul class="log-list" id="log-list"><li class="empty-log">No scans yet</li></ul>
   </div>
-  <div class="footer">ALYAFEI WEDDING &middot; VERIFICATION v7.0</div>
+
+  <div class="footer">ALYAFEI WEDDING &middot; VERIFICATION v8.0</div>
 </div>
 
 <script>
 var CONFIG = { total: 400, prefix: "ALYAFEI-WED-2026", arabic: "حفل زفاف عبدالرحمن اليافعي" };
 var admitted = 0, rejected = 0, scannedIds = new Set(), scanLog = [];
-var USE_NATIVE = false, nativeDetector = null;
-if ("BarcodeDetector" in window) {
-  try { nativeDetector = new BarcodeDetector({ formats: ["qr_code"] }); USE_NATIVE = true; } catch(e) {}
-}
 
+// ── ON LOAD: check URL for ?id= param ──
 window.addEventListener("load", function() {
-  var b = document.getElementById("engine-badge");
-  b.textContent = USE_NATIVE ? "Native QR engine ready" : "jsQR engine ready";
-  b.style.color = USE_NATIVE ? "#27ae60" : "#aaa";
-
-  // Attach change listener via JS as well (belt and braces for Safari)
-  var inp = document.getElementById("cam-input");
-  if (inp) {
-    inp.addEventListener("change", function() { handleCapture(this); });
-    dbg("change listener attached OK");
+  var params = new URLSearchParams(window.location.search);
+  var id = params.get("id");
+  if (id) {
+    // QR code was scanned — verify and show result
+    var content = document.getElementById("main-content");
+    var parsed = parseId(id);
+    var html = "";
+    if (!parsed.valid) {
+      html = makeResult("invalid", "&#10007;", "INVALID CARD", "This card is not genuine", id.toUpperCase());
+      rejected++; addLog(id.toUpperCase(), "i");
+    } else if (scannedIds.has(parsed.full)) {
+      html = makeResult("duplicate", "&#9888;", "ALREADY SCANNED", "This card was already used to enter", parsed.full);
+      rejected++; addLog(parsed.full, "d");
+    } else {
+      html = makeResult("valid", "&#10003;", "VALID GUEST", "Guest #" + parsed.num + " of " + CONFIG.total + " &mdash; Welcome", parsed.full);
+      scannedIds.add(parsed.full); admitted++; addLog(parsed.full, "v");
+    }
+    html += "<button class=\"scan-again\" onclick=\"window.location.href=window.location.pathname\">&#128247; Scan next guest</button>";
+    content.innerHTML = html;
+    updateStats();
+    if (navigator.vibrate) navigator.vibrate([80,40,80]);
+  } else {
+    // No ID in URL — show instructions
+    document.getElementById("main-content").innerHTML =
+      "<div class=\"how-card\">" +
+      "<div class=\"icon\">&#128247;</div>" +
+      "<h3>How to use</h3>" +
+      "<p>Point your phone camera at a guest QR code. The result will appear instantly on this page.</p>" +
+      "</div>";
   }
+  document.getElementById("stat-total").textContent = CONFIG.total;
 });
 
-// ── CAMERA: use file input with capture="environment" ──
-// This is the most compatible method — works on ALL phones without permission prompts
-// camera opened via label - no JS needed
-
-function handleCapture(input) {
-  if (!input.files || !input.files[0]) {
-    dbg("No file selected");
-    return;
-  }
-  setStatus("Photo received — reading...", "scanning");
-  dbg("File: " + input.files[0].name + " (" + Math.round(input.files[0].size/1024) + "KB)");
-  dbg("Native engine: " + USE_NATIVE);
-
-  var file = input.files[0];
-  var reader = new FileReader();
-  reader.onload = function(e) {
-    var img = new Image();
-    img.onload = function() {
-      dbg("Image loaded: " + img.width + "x" + img.height + "px");
-
-      if (USE_NATIVE) {
-        dbg("Trying BarcodeDetector...");
-        nativeDetector.detect(img)
-          .then(function(codes) {
-            dbg("BarcodeDetector result: " + codes.length + " codes found");
-            if (codes && codes.length > 0 && codes[0].rawValue) {
-              var data = codes[0].rawValue.trim();
-              setStatus("Found: " + data, "found");
-              vibrate(); verify(data);
-            } else {
-              dbg("BarcodeDetector found nothing — trying jsQR...");
-              jsqrScan(img);
-            }
-          })
-          .catch(function(err) {
-            dbg("BarcodeDetector error: " + err);
-            jsqrScan(img);
-          });
-      } else {
-        dbg("Using jsQR...");
-        jsqrScan(img);
-      }
-      input.value = "";
-    };
-    img.onerror = function() { dbg("ERROR: Image failed to load"); setStatus("Could not load photo", "error"); };
-    img.src = e.target.result;
-  };
-  reader.onerror = function() { dbg("ERROR: FileReader failed"); };
-  reader.readAsDataURL(file);
+function makeResult(cls, icon, title, sub, id) {
+  return "<div class=\"result-card " + cls + "\">" +
+    "<div class=\"result-icon\">" + icon + "</div>" +
+    "<p class=\"result-title\">" + title + "</p>" +
+    "<p class=\"result-sub\">" + sub + "</p>" +
+    "<p class=\"result-id\">" + id + "</p>" +
+    "</div>";
 }
 
-function jsqrScan(img) {
-  // Try multiple resolutions — start high for best accuracy
-  var sizes = [
-    { w: img.width,   h: img.height },    // full native resolution
-    { w: 1600,        h: Math.round(img.height * (1600/img.width)) },
-    { w: 800,         h: Math.round(img.height * (800/img.width))  }
-  ];
-
-  for (var s = 0; s < sizes.length; s++) {
-    var canvas = document.getElementById("cam-canvas");
-    canvas.width  = sizes[s].w;
-    canvas.height = sizes[s].h;
-    var ctx = canvas.getContext("2d");
-    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-    var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    var code = jsQR(imageData.data, canvas.width, canvas.height, { inversionAttempts: "attemptBoth" });
-    if (code && code.data && code.data.trim()) {
-      setStatus("Found: " + code.data.trim(), "found");
-      vibrate(); verify(code.data.trim());
-      return;
-    }
-  }
-
-  // Last attempt: crop to center square — handles photos with lots of background
-  var canvas2 = document.getElementById("cam-canvas");
-  var cropSz = Math.min(img.width, img.height);
-  var cx = (img.width  - cropSz) / 2;
-  var cy = (img.height - cropSz) / 2;
-  canvas2.width = canvas2.height = 800;
-  var ctx2 = canvas2.getContext("2d");
-  ctx2.drawImage(img, cx, cy, cropSz, cropSz, 0, 0, 800, 800);
-  var imageData2 = ctx2.getImageData(0, 0, 800, 800);
-  var code2 = jsQR(imageData2.data, 800, 800, { inversionAttempts: "attemptBoth" });
-  if (code2 && code2.data && code2.data.trim()) {
-    setStatus("Found: " + code2.data.trim(), "found");
-    vibrate(); verify(code2.data.trim());
-    return;
-  }
-
-  setStatus("No QR found — take the photo closer to the QR code", "error");
-}
-
-function dbg(msg) {
-  var box = document.getElementById("debug-box");
-  var log = document.getElementById("debug-log");
-  if (box && log) {
-    box.style.display = "block";
-    var line = document.createElement("div");
-    line.textContent = new Date().toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit",second:"2-digit"}) + "  " + msg;
-    log.appendChild(line);
-    log.scrollTop = log.scrollHeight;
-  }
-}
-
-function setStatus(msg, cls) {
-  var el = document.getElementById("cam-status");
-  el.textContent = msg; el.className = "cam-status" + (cls ? " " + cls : "");
-}
-function vibrate() { if (navigator.vibrate) navigator.vibrate([80,40,80]); }
-
+// ── SETTINGS ──
 function toggleSettings() {
   var p = document.getElementById("settings-panel");
   p.style.display = p.style.display === "block" ? "none" : "block";
@@ -296,55 +206,53 @@ function saveSettings() {
   clearAll(); toggleSettings(); alert("Saved!");
 }
 
-document.getElementById("id-input").addEventListener("keydown", function(e) { if (e.key === "Enter") verifyManual(); });
-document.getElementById("id-input").addEventListener("input", function(e) { e.target.value = e.target.value.toUpperCase(); });
+// ── MANUAL INPUT ──
+document.addEventListener("DOMContentLoaded", function() {
+  var inp = document.getElementById("id-input");
+  if (inp) {
+    inp.addEventListener("keydown", function(e) { if (e.key === "Enter") verifyManual(); });
+    inp.addEventListener("input", function(e) { e.target.value = e.target.value.toUpperCase(); });
+  }
+});
 function verifyManual() {
   var raw = document.getElementById("id-input").value;
   if (!raw.trim()) return;
-  verify(raw); document.getElementById("id-input").value = ""; document.getElementById("id-input").focus();
+  var parsed = parseId(raw);
+  var content = document.getElementById("main-content");
+  var html = "";
+  if (!parsed.valid) {
+    html = makeResult("invalid", "&#10007;", "INVALID CARD", "This ID does not match any issued card", raw.trim().toUpperCase());
+    rejected++; addLog(raw.trim().toUpperCase(), "i");
+  } else if (scannedIds.has(parsed.full)) {
+    html = makeResult("duplicate", "&#9888;", "ALREADY SCANNED", "This card was already used to enter", parsed.full);
+    rejected++; addLog(parsed.full, "d");
+  } else {
+    html = makeResult("valid", "&#10003;", "VALID GUEST", "Guest #" + parsed.num + " of " + CONFIG.total + " &mdash; Welcome", parsed.full);
+    scannedIds.add(parsed.full); admitted++; addLog(parsed.full, "v");
+  }
+  html += "<button class=\"scan-again\" onclick=\"window.location.href=window.location.pathname\">&#128247; Scan next guest</button>";
+  content.innerHTML = html;
+  updateStats();
+  document.getElementById("id-input").value = "";
+  content.scrollIntoView({ behavior: "smooth", block: "center" });
 }
 
+// ── PARSE ID ──
 function parseId(raw) {
   var val = raw.trim().toUpperCase();
-  var esc = CONFIG.prefix.replace(/[.*+?^${}()|[\]\]/g, "\$&");
-  var m = val.match(new RegExp("^" + esc + "[-]?(\d{1,4})$"));
+  var esc = CONFIG.prefix.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  var m = val.match(new RegExp("^" + esc + "[-]?(\\d{1,4})$"));
   if (m) { var n = parseInt(m[1]); if (n>=1&&n<=CONFIG.total) return { valid:true, num:n, full:CONFIG.prefix+"-"+String(n).padStart(3,"0") }; }
   var m2 = val.match(/^(\d{1,4})$/);
-  if (m2) { var n2 = parseInt(m2[1]); if (n2>=1&&n2<=CONFIG.total) return { valid:true, num:n2, full:CONFIG.prefix+"-"+String(n2).padStart(3,"0") }; }
+  if (m2) { var n2=parseInt(m2[1]); if (n2>=1&&n2<=CONFIG.total) return { valid:true, num:n2, full:CONFIG.prefix+"-"+String(n2).padStart(3,"0") }; }
   return { valid:false, full:val };
 }
 
-function verify(raw) {
-  var p = parseId(raw);
-  var card = document.getElementById("result-card");
-  card.style.display = "block"; card.className = "result-card";
-  if (!p.valid) {
-    card.classList.add("invalid");
-    document.getElementById("result-icon").textContent = "✗";
-    document.getElementById("result-title").textContent = "INVALID CARD";
-    document.getElementById("result-sub").textContent = "This ID does not match any issued card";
-    document.getElementById("result-id").textContent = raw.trim().toUpperCase();
-    rejected++; addLog(raw.trim().toUpperCase(), "i");
-  } else if (scannedIds.has(p.full)) {
-    card.classList.add("duplicate");
-    document.getElementById("result-icon").textContent = "⚠";
-    document.getElementById("result-title").textContent = "ALREADY SCANNED";
-    document.getElementById("result-sub").textContent = "This card was already used to enter";
-    document.getElementById("result-id").textContent = p.full;
-    rejected++; addLog(p.full, "d");
-  } else {
-    card.classList.add("valid");
-    document.getElementById("result-icon").textContent = "✓";
-    document.getElementById("result-title").textContent = "VALID GUEST";
-    document.getElementById("result-sub").textContent = "Guest #" + p.num + " of " + CONFIG.total + "  —  Welcome";
-    document.getElementById("result-id").textContent = p.full;
-    scannedIds.add(p.full); admitted++; addLog(p.full, "v");
-  }
+// ── STATS & LOG ──
+function updateStats() {
   document.getElementById("stat-admitted").textContent = admitted;
   document.getElementById("stat-rejected").textContent = rejected;
-  card.scrollIntoView({ behavior: "smooth", block: "center" });
 }
-
 function addLog(id, type) {
   var now = new Date();
   var time = now.toLocaleTimeString("en-GB", { hour:"2-digit", minute:"2-digit", second:"2-digit" });
@@ -356,15 +264,14 @@ function renderLog() {
   var list = document.getElementById("log-list");
   if (!scanLog.length) { list.innerHTML = "<li class=\"empty-log\">No scans yet</li>"; return; }
   list.innerHTML = scanLog.map(function(e) {
-    var lbl = e.type==="v"?"✓":e.type==="d"?"⚠":"✗";
+    var lbl = e.type==="v"?"&#10003;":e.type==="d"?"&#9888;":"&#10007;";
     return "<li class=\"log-item "+e.type+"\"><div class=\"dot\"></div><span class=\"id-text\">"+lbl+" "+e.id+"</span><span class=\"time-text\">"+e.time+"</span></li>";
   }).join("");
 }
 function clearAll() {
   admitted=0; rejected=0; scannedIds.clear(); scanLog=[];
-  document.getElementById("stat-admitted").textContent=0;
-  document.getElementById("stat-rejected").textContent=0;
-  document.getElementById("result-card").style.display="none";
+  updateStats();
+  document.getElementById("result-card") && (document.getElementById("result-card").style.display="none");
   renderLog();
 }
 </script>

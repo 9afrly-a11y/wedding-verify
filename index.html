@@ -20,6 +20,7 @@
   .settings-panel input:focus { border-color: #c8a96e; }
   .save-btn { width: 100%; margin-top: 12px; background: #1a1208; color: #c8a96e; border: none; border-radius: 8px; padding: 10px; font-size: 14px; font-weight: 600; cursor: pointer; }
   .camera-card { background: #fff; border: 1px solid #e0d8c8; border-radius: 14px; padding: 1.1rem; margin-bottom: 1rem; }
+  .cam-toggle { position: relative; overflow: hidden; }
   .cam-toggle { display: block; background: #1a1208; color: #c8a96e; border: none; border-radius: 8px; padding: 11px 18px; font-size: 15px; font-weight: 600; cursor: pointer; width: 100%; text-align: center; text-decoration: none; box-sizing: border-box; }
   .cam-toggle:active { transform: scale(0.98); opacity: 0.85; }
   .viewfinder-wrap { display: none; position: relative; margin-top: 12px; border-radius: 12px; overflow: hidden; background: #000; }
@@ -105,8 +106,10 @@
   </div>
 
   <div class="camera-card">
-    <input type="file" id="cam-input" accept="image/*" capture="environment" onchange="handleCapture(this)" style="position:absolute;left:-9999px;top:-9999px;opacity:0;width:1px;height:1px;">
-    <label for="cam-input" class="cam-toggle" id="cam-btn">&#128247; &nbsp;Scan QR Code</label>
+    <label class="cam-toggle" id="cam-btn">
+      &#128247; &nbsp;Scan QR Code
+      <input type="file" id="cam-input" accept="image/*" capture="environment" style="position:absolute;left:0;top:0;width:100%;height:100%;opacity:0;cursor:pointer;">
+    </label>
     <canvas id="cam-canvas" style="display:none"></canvas>
     <div class="cam-status" id="cam-status">Tap button — phone camera will open</div>
     <div class="engine-badge" id="engine-badge"></div>
@@ -142,7 +145,7 @@
     <div class="log-header"><span>Recent scans</span><button onclick="clearAll()">Clear all</button></div>
     <ul class="log-list" id="log-list"><li class="empty-log">No scans yet</li></ul>
   </div>
-  <div class="footer">ALYAFEI WEDDING &middot; VERIFICATION v6.0-debug</div>
+  <div class="footer">ALYAFEI WEDDING &middot; VERIFICATION v7.0</div>
 </div>
 
 <script>
@@ -157,6 +160,13 @@ window.addEventListener("load", function() {
   var b = document.getElementById("engine-badge");
   b.textContent = USE_NATIVE ? "Native QR engine ready" : "jsQR engine ready";
   b.style.color = USE_NATIVE ? "#27ae60" : "#aaa";
+
+  // Attach change listener via JS as well (belt and braces for Safari)
+  var inp = document.getElementById("cam-input");
+  if (inp) {
+    inp.addEventListener("change", function() { handleCapture(this); });
+    dbg("change listener attached OK");
+  }
 });
 
 // ── CAMERA: use file input with capture="environment" ──

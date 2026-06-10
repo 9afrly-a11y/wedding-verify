@@ -106,13 +106,10 @@
   </div>
 
   <div class="camera-card">
-    <button class="cam-toggle" id="cam-btn" onclick="toggleCamera()">&#128247; &nbsp;Open Camera to Scan</button>
-    <div class="viewfinder-wrap" id="viewfinder-wrap">
-      <video id="cam-video" playsinline autoplay muted></video>
-      <canvas id="cam-canvas"></canvas>
-      <div class="scan-overlay"><div class="scan-box-frame"><span></span><div class="scan-line"></div></div></div>
-    </div>
-    <div class="cam-status" id="cam-status">Camera is off</div>
+    <button class="cam-toggle" id="cam-btn" onclick="openCamera()">&#128247; &nbsp;Scan QR Code</button>
+    <input type="file" id="cam-input" accept="image/*" capture="environment" style="display:none" onchange="handleCapture(this)">
+    <canvas id="cam-canvas" style="display:none"></canvas>
+    <div class="cam-status" id="cam-status">Tap button to open camera</div>
     <div class="engine-badge" id="engine-badge"></div>
   </div>
 
@@ -148,145 +145,75 @@
 var CONFIG = { total: 400, prefix: "ALYAFEI-WED-2026", arabic: "حفل زفاف عبدالرحمن اليافعي" };
 var admitted = 0, rejected = 0, scannedIds = new Set(), scanLog = [];
 var USE_NATIVE = false, nativeDetector = null;
-
 if ("BarcodeDetector" in window) {
   try { nativeDetector = new BarcodeDetector({ formats: ["qr_code"] }); USE_NATIVE = true; } catch(e) {}
 }
 
 window.addEventListener("load", function() {
   var b = document.getElementById("engine-badge");
-  if (USE_NATIVE) { b.textContent = "✓ Native scanner active (best quality)"; b.style.color = "#27ae60"; }
-  else { b.textContent = "Using jsQR scanner engine"; }
+  b.textContent = USE_NATIVE ? "Native QR engine ready" : "jsQR engine ready";
+  b.style.color = USE_NATIVE ? "#27ae60" : "#aaa";
 });
 
-var cameraOn = false, videoStream = null, rafId = null, lastScanTime = 0, frameCount = 0;
-var COOLDOWN = 2500;
-
-function toggleCamera() { cameraOn ? stopCamera() : startCamera(); }
-
-function startCamera() {
-  // Check 1: HTTPS required
-  if (location.protocol !== "https:" && location.hostname !== "localhost") {
-    setStatus("Error: must open via https:// link, not local file", "error");
-    alert("Camera requires HTTPS.
-
-Open this link in Safari:
-https://9afrly-a11y.github.io/wedding-verify");
-    return;
-  }
-  // Check 2: mediaDevices API available
-  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-    setStatus("Error: camera API not available in this browser", "error");
-    alert("Camera not supported.
-Please open in Safari (iPhone) or Chrome (Android).");
-    return;
-  }
-  setStatus("Requesting camera permission...", "scanning");
-  navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment" }, width: { ideal: 1280 }, height: { ideal: 720 } } })
-  .then(function(stream) {
-    videoStream = stream;
-    var v = document.getElementById("cam-video");
-    v.srcObject = stream; v.play();
-    v.onloadedmetadata = function() {
-      document.getElementById("viewfinder-wrap").style.display = "block";
-      document.getElementById("cam-btn").innerHTML = "&#9209; &nbsp;Stop Camera";
-      document.getElementById("cam-btn").classList.add("active");
-      setStatus("Point camera at QR code...", "scanning");
-      cameraOn = true; frameCount = 0;
-      USE_NATIVE ? nativeScanLoop() : (rafId = requestAnimationFrame(jsqrLoop));
-    };
-  })
-  .catch(function(err) {
-    var msg = "";
-    if (err.name === "NotAllowedError") {
-      msg = "Permission denied. On iPhone: Settings > Safari > Camera > Allow";
-      alert("Camera permission denied.
-
-Fix: iPhone Settings > Safari > Camera > set to Allow");
-    } else if (err.name === "NotFoundError") {
-      msg = "No camera found on this device";
-    } else if (err.name === "NotReadableError") {
-      msg = "Camera in use by another app - close other apps and try again";
-    } else if (err.name === "OverconstrainedError") {
-      msg = "Camera constraint error - trying basic mode...";
-      // Retry with minimal constraints
-      navigator.mediaDevices.getUserMedia({ video: true })
-        .then(function(stream) {
-          videoStream = stream;
-          var v = document.getElementById("cam-video");
-          v.srcObject = stream; v.play();
-          v.onloadedmetadata = function() {
-            document.getElementById("viewfinder-wrap").style.display = "block";
-            document.getElementById("cam-btn").innerHTML = "&#9209; &nbsp;Stop Camera";
-            document.getElementById("cam-btn").classList.add("active");
-            setStatus("Camera open (basic mode)", "scanning");
-            cameraOn = true; frameCount = 0;
-            USE_NATIVE ? nativeScanLoop() : (rafId = requestAnimationFrame(jsqrLoop));
-          };
-        })
-        .catch(function(e2) { setStatus("Camera failed: " + e2.name, "error"); });
-      return;
-    } else {
-      msg = "Camera error: " + err.name + " - " + err.message;
-    }
-    setStatus(msg, "error");
-  });
+// ── CAMERA: use file input with capture="environment" ──
+// This is the most compatible method — works on ALL phones without permission prompts
+function openCamera() {
+  document.getElementById("cam-input").click();
 }
 
-function stopCamera() {
-  if (videoStream) { videoStream.getTracks().forEach(function(t){ t.stop(); }); videoStream = null; }
-  if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
-  cameraOn = false;
-  document.getElementById("cam-video").srcObject = null;
-  document.getElementById("viewfinder-wrap").style.display = "none";
-  document.getElementById("cam-btn").innerHTML = "&#128247; &nbsp;Open Camera to Scan";
-  document.getElementById("cam-btn").classList.remove("active");
-  setStatus("Camera is off", "");
-}
+function handleCapture(input) {
+  if (!input.files || !input.files[0]) return;
+  setStatus("Reading QR code...", "scanning");
+  var file = input.files[0];
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    var img = new Image();
+    img.onload = function() {
+      var canvas = document.getElementById("cam-canvas");
+      // Scale down if huge — keeps processing fast
+      var maxDim = 1200;
+      var scale = Math.min(1, maxDim / Math.max(img.width, img.height));
+      canvas.width  = Math.round(img.width  * scale);
+      canvas.height = Math.round(img.height * scale);
+      var ctx = canvas.getContext("2d");
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
-function nativeScanLoop() {
-  if (!cameraOn) return;
-  var v = document.getElementById("cam-video");
-  if (v.readyState < 2) { setTimeout(nativeScanLoop, 100); return; }
-  var now = Date.now();
-  if (now - lastScanTime > COOLDOWN) {
-    nativeDetector.detect(v).then(function(codes) {
-      if (codes && codes.length > 0 && codes[0].rawValue) {
-        lastScanTime = Date.now();
-        var data = codes[0].rawValue.trim();
-        setStatus("Found: " + data, "found");
-        vibrate(); verify(data);
-        setTimeout(function() { if (cameraOn) setStatus("Point camera at QR code...", "scanning"); }, 2500);
+      var found = false;
+
+      // Method 1: Native BarcodeDetector (fastest, most accurate)
+      if (USE_NATIVE) {
+        nativeDetector.detect(canvas).then(function(codes) {
+          if (codes && codes.length > 0 && codes[0].rawValue) {
+            found = true;
+            var data = codes[0].rawValue.trim();
+            setStatus("Found: " + data, "found");
+            vibrate(); verify(data);
+          } else {
+            // Method 2: jsQR fallback
+            tryJsQR(canvas, ctx);
+          }
+        }).catch(function() { tryJsQR(canvas, ctx); });
+      } else {
+        // Method 2: jsQR
+        tryJsQR(canvas, ctx);
       }
-    }).catch(function(){}).finally(function() { if (cameraOn) setTimeout(nativeScanLoop, 200); });
-  } else { if (cameraOn) setTimeout(nativeScanLoop, 200); }
+      // Reset file input so same photo can be retried
+      input.value = "";
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
 }
 
-function jsqrLoop() {
-  if (!cameraOn) return;
-  frameCount++;
-  if (frameCount % 4 !== 0) { rafId = requestAnimationFrame(jsqrLoop); return; }
-  var v = document.getElementById("cam-video"), c = document.getElementById("cam-canvas");
-  if (v.readyState < 2) { rafId = requestAnimationFrame(jsqrLoop); return; }
-  var vw = v.videoWidth, vh = v.videoHeight;
-  if (Date.now() - lastScanTime > COOLDOWN) {
-    c.width = vw; c.height = vh;
-    var ctx = c.getContext("2d"); ctx.drawImage(v, 0, 0, vw, vh);
-    var code = jsQR(ctx.getImageData(0,0,vw,vh).data, vw, vh, { inversionAttempts: "attemptBoth" });
-    if (!code) {
-      var sz = Math.min(vw,vh)*0.6, cx = (vw-sz)/2, cy = (vh-sz)/2;
-      var cc = document.createElement("canvas"); cc.width = cc.height = 512;
-      var cctx = cc.getContext("2d"); cctx.drawImage(v, cx, cy, sz, sz, 0, 0, 512, 512);
-      code = jsQR(cctx.getImageData(0,0,512,512).data, 512, 512, { inversionAttempts: "attemptBoth" });
-    }
-    if (code && code.data && code.data.trim()) {
-      lastScanTime = Date.now();
-      setStatus("Found: " + code.data.trim(), "found");
-      vibrate(); verify(code.data.trim());
-      setTimeout(function() { if (cameraOn) setStatus("Point camera at QR code...", "scanning"); }, 2500);
-    }
+function tryJsQR(canvas, ctx) {
+  var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  var code = jsQR(imageData.data, canvas.width, canvas.height, { inversionAttempts: "attemptBoth" });
+  if (code && code.data && code.data.trim()) {
+    setStatus("Found: " + code.data.trim(), "found");
+    vibrate(); verify(code.data.trim());
+  } else {
+    setStatus("No QR code found — try again, make sure QR fills the frame", "error");
   }
-  rafId = requestAnimationFrame(jsqrLoop);
 }
 
 function setStatus(msg, cls) {

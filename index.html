@@ -100,8 +100,8 @@
 
   <div class="scan-box">
     <p>Type guest ID and tap Verify</p>
-    <input type="text" id="id-input" placeholder="ALYAFEI-WED-2026-001"
-      autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false">
+    <input type="number" id="id-input" placeholder="12345"
+      inputmode="numeric" pattern="[0-9]*" autocomplete="off" maxlength="5">
     <button class="verify-btn" onclick="verifyManual()">&#10003; Verify Guest</button>
   </div>
 
@@ -116,7 +116,7 @@
     <ul class="log-list" id="log-list"><li class="empty-log">No scans yet</li></ul>
   </div>
 
-  <div class="footer">ALYAFEI WEDDING &middot; VERIFICATION v9.0 &middot; Server-tracked</div>
+  <div class="footer">ALYAFEI WEDDING &middot; VERIFICATION v10.0 &middot; Server-tracked</div>
 </div>
 
 <script>
@@ -161,9 +161,9 @@ async function dbRecord(guestId) {
 window.addEventListener("load", async function() {
   document.getElementById("stat-total").textContent = CONFIG.total;
   var params = new URLSearchParams(window.location.search);
-  var id = params.get("id");
+  var id = params.get("code") || params.get("id");
   if (id) {
-    await verifyId(id.trim().toUpperCase());
+    await verifyId(id.trim());
   } else {
     document.getElementById("main-content").innerHTML =
       '<div class="how-card">' +
@@ -252,12 +252,15 @@ async function verifyManual() {
 
 // ── PARSE ID ──
 function parseId(raw) {
-  var val = raw.trim().toUpperCase();
+  var val = raw.trim();
+  // 5-digit numeric code (new format)
+  var m5 = val.match(/^(\d{5})$/);
+  if (m5) return { valid: true, num: parseInt(m5[1]), full: m5[1] };
+  // Legacy full ID format
+  var valU = val.toUpperCase();
   var esc = CONFIG.prefix.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  var m = val.match(new RegExp("^" + esc + "[-]?(\\d{1,4})$"));
+  var m = valU.match(new RegExp("^" + esc + "[-]?(\\d{1,4})$"));
   if (m) { var n=parseInt(m[1]); if(n>=1&&n<=CONFIG.total) return {valid:true,num:n,full:CONFIG.prefix+"-"+String(n).padStart(3,"0")}; }
-  var m2 = val.match(/^(\d{1,4})$/);
-  if (m2) { var n2=parseInt(m2[1]); if(n2>=1&&n2<=CONFIG.total) return {valid:true,num:n2,full:CONFIG.prefix+"-"+String(n2).padStart(3,"0")}; }
   return {valid:false,full:val};
 }
 

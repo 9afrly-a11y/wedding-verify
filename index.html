@@ -112,6 +112,11 @@
     <div class="engine-badge" id="engine-badge"></div>
   </div>
 
+  <div id="debug-box" style="background:#1a1208;border-radius:10px;padding:10px;margin-bottom:1rem;display:none;">
+    <div style="color:#c8a96e;font-size:11px;font-weight:600;margin-bottom:6px;letter-spacing:0.05em;">DEBUG LOG</div>
+    <div id="debug-log" style="font-family:monospace;font-size:11px;color:#aaa;line-height:1.7;"></div>
+    <button onclick="document.getElementById('debug-box').style.display='none'" style="margin-top:8px;font-size:11px;padding:3px 10px;background:none;border:1px solid #c8a96e;color:#c8a96e;border-radius:4px;cursor:pointer;">Close</button>
+  </div>
   <div class="divider-row"><hr><span>or type manually</span><hr></div>
 
   <div class="scan-box">
@@ -137,7 +142,7 @@
     <div class="log-header"><span>Recent scans</span><button onclick="clearAll()">Clear all</button></div>
     <ul class="log-list" id="log-list"><li class="empty-log">No scans yet</li></ul>
   </div>
-  <div class="footer">ALYAFEI WEDDING &middot; VERIFICATION v5.1</div>
+  <div class="footer">ALYAFEI WEDDING &middot; VERIFICATION v6.0-debug</div>
 </div>
 
 <script>
@@ -159,36 +164,49 @@ window.addEventListener("load", function() {
 // camera opened via label - no JS needed
 
 function handleCapture(input) {
-  if (!input.files || !input.files[0]) return;
-  setStatus("Reading QR code...", "scanning");
+  if (!input.files || !input.files[0]) {
+    dbg("No file selected");
+    return;
+  }
+  setStatus("Photo received — reading...", "scanning");
+  dbg("File: " + input.files[0].name + " (" + Math.round(input.files[0].size/1024) + "KB)");
+  dbg("Native engine: " + USE_NATIVE);
+
   var file = input.files[0];
   var reader = new FileReader();
   reader.onload = function(e) {
     var img = new Image();
     img.onload = function() {
+      dbg("Image loaded: " + img.width + "x" + img.height + "px");
 
-      // Method 1: Native BarcodeDetector on the raw image — most accurate
       if (USE_NATIVE) {
+        dbg("Trying BarcodeDetector...");
         nativeDetector.detect(img)
           .then(function(codes) {
+            dbg("BarcodeDetector result: " + codes.length + " codes found");
             if (codes && codes.length > 0 && codes[0].rawValue) {
               var data = codes[0].rawValue.trim();
               setStatus("Found: " + data, "found");
               vibrate(); verify(data);
             } else {
-              // fallback to jsQR
+              dbg("BarcodeDetector found nothing — trying jsQR...");
               jsqrScan(img);
             }
           })
-          .catch(function() { jsqrScan(img); });
+          .catch(function(err) {
+            dbg("BarcodeDetector error: " + err);
+            jsqrScan(img);
+          });
       } else {
+        dbg("Using jsQR...");
         jsqrScan(img);
       }
-      // Reset so same card can be re-scanned if needed
       input.value = "";
     };
+    img.onerror = function() { dbg("ERROR: Image failed to load"); setStatus("Could not load photo", "error"); };
     img.src = e.target.result;
   };
+  reader.onerror = function() { dbg("ERROR: FileReader failed"); };
   reader.readAsDataURL(file);
 }
 
@@ -232,6 +250,18 @@ function jsqrScan(img) {
   }
 
   setStatus("No QR found — take the photo closer to the QR code", "error");
+}
+
+function dbg(msg) {
+  var box = document.getElementById("debug-box");
+  var log = document.getElementById("debug-log");
+  if (box && log) {
+    box.style.display = "block";
+    var line = document.createElement("div");
+    line.textContent = new Date().toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit",second:"2-digit"}) + "  " + msg;
+    log.appendChild(line);
+    log.scrollTop = log.scrollHeight;
+  }
 }
 
 function setStatus(msg, cls) {
